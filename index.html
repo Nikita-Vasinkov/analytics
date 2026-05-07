@@ -52,6 +52,7 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
 .series-group-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#8a8a96;font-weight:600;margin-bottom:12px}
 .series-chips{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
 .series-chip{align-self:flex-start}
+.series-empty{font-size:.7rem;color:#b8bcc7;font-style:italic;padding:2px 0}
 .series-chip{
   --c:#999;
   position:relative;padding:5px 12px 5px 10px;border-radius:999px;
@@ -78,6 +79,35 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
 .legend-note .hint b{color:#6b6b7a;font-weight:600}
 
 .footer{text-align:center;padding:30px;color:#9aa1ad;font-size:.78rem}
+
+.results-table-wrap{border-top:1px solid #ececf2;padding:0 0 4px}
+.results-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.results-table thead tr{border-bottom:1px solid #ececf2}
+.results-table thead th{padding:10px 20px;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:#8a8a96;font-weight:600;text-align:left;white-space:nowrap}
+.results-table thead th.num{text-align:right}
+.results-table tbody tr{border-bottom:1px solid #f5f5fa;transition:background .12s,opacity .28s ease,transform .28s ease}
+.results-table tbody tr:last-child{border-bottom:none}
+.results-table tbody tr:hover{background:#fafafe}
+.results-table tbody tr.rt-enter{opacity:0;transform:translateY(-7px)}
+.results-table tbody tr.rt-exit{opacity:0;transform:translateY(7px);pointer-events:none}
+.results-table td{padding:9px 20px;vertical-align:middle}
+.results-table td.rank{color:#b8bcc7;font-weight:700;font-size:.68rem;width:24px;text-align:right}
+.results-table td.name-cell{display:flex;align-items:center;gap:9px}
+.results-table td.name-cell .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.results-table td.name-cell .sname{font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+.results-table td.name-cell .cluster{font-size:.68rem;color:#9aa1ad;margin-left:2px}
+.results-table td.ret{text-align:right;font-weight:700;font-size:.82rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.results-table td.ret.pos{color:#1f8a4d}
+.results-table td.ret.neg{color:#d04343}
+.results-table td.ret.zero{color:#9aa1ad}
+.results-table-empty{padding:20px 24px;font-size:.78rem;color:#b8bcc7;font-style:italic}
+
+@media(max-width:768px){
+  .results-table thead th{padding:8px 14px;font-size:.62rem}
+  .results-table td{padding:8px 14px}
+  .results-table td.name-cell .sname{max-width:160px}
+  .results-table td.ret{font-size:.76rem}
+}
 
 @media(max-width:768px){
   body{font-size:13px}
@@ -147,21 +177,18 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     </div>
     <div class="sh-row sh-row-bottom">
       <div class="curr-toggle" id="currToggle" role="group" aria-label="Валюта отображения">
-        <button type="button" class="curr-toggle-opt active" data-curr="RUB">RUB</button>
+        <button type="button" class="curr-toggle-opt" data-curr="RUB">RUB</button>
         <span class="curr-toggle-sep">/</span>
-        <button type="button" class="curr-toggle-opt" data-curr="USD">USD</button>
+        <button type="button" class="curr-toggle-opt active" data-curr="USD">USD</button>
       </div>
       <div class="period-btns" id="periodBtns">
         <button class="period-btn" data-period="1W">1W</button>
         <button class="period-btn" data-period="1M">1M</button>
-        <button class="period-btn active" data-period="1Y">1Y</button>
+        <button class="period-btn" data-period="1Y">1Y</button>
         <button class="period-btn" data-period="YTD">С начала года</button>
         <span class="period-btn-sep" aria-hidden="true"></span>
-        <button class="period-btn" data-period="Y2008">2008</button>
-        <button class="period-btn" data-period="Y2014">2014</button>
+        <button class="period-btn active" data-period="Y2014">2014</button>
         <button class="period-btn" data-period="Y2022">2022</button>
-        <span class="period-btn-sep" aria-hidden="true"></span>
-        <button class="period-btn" data-period="ALL">Всё</button>
       </div>
     </div>
   </div>
@@ -171,40 +198,60 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
   </div>
 
   <div class="series-panel" id="seriesPanel"></div>
+  <div class="results-table-wrap" id="resultsTableWrap"></div>
 </div>
-
-<div class="footer">© АТОН</div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ru.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+<!-- Файлы реальных данных. Каждый регистрирует window.SERIES_REAL[<id>].<RUB|USD>.
+     Чтобы добавить новый тикер: положить data/<id>_rub.js и/или data/<id>_usd.js
+     по аналогии с mcftr_*.js и подключить здесь ниже. -->
+<script src="data/mcftr_rub.js?v=4"></script>
+<script src="data/mcftr_usd.js?v=4"></script>
+<script src="data/msci_rub.js?v=1"></script>
+<script src="data/msci_usd.js?v=1"></script>
+<script src="data/bp.js?v=3"></script>
+<script src="data/jpm.js?v=1"></script>
+<script src="data/shell.js?v=1"></script>
+<script src="data/barclays.js?v=1"></script>
+
 <script>
 (function(){
   // ===== КЛАСТЕРЫ БУМАГ =====
-  // Позже сюда подставим реальные тикеры и данные.
+  // Палитры (оставлены под будущие тикеры, проверены на белом фоне):
+  //   Нефть и газ : #F56E8E (розовый), #F9AC8B (персиковый), #E8B431 (золотой)
+  //   Банки       : #5786FF (синий),   #04AEAE (бирюзовый),  #3DC489 (зелёный)
+  //   Индексы     : #6f3ff5 (фиолет.), #9CA3FF (лавандовый), #5EEAD4 (мятный)
+  // При добавлении новой бумаги в кластер — берите следующий неиспользованный
+  // цвет из соответствующей палитры (или подбирайте близкий по тону).
   const SERIES_GROUPS=[
     {
       id:'oil', title:'Нефть и газ', dot:'#F56E8E',
       items:[
-        {id:'oil-1', name:'Тест 1', color:'#F56E8E', seed:1},
-        {id:'oil-2', name:'Тест 2', color:'#F9AC8B', seed:2},
-        {id:'oil-3', name:'Тест 3', color:'#E8B431', seed:3}
+        // BP — данные с реинвестом дивидендов (см. data/bp.js):
+        // SERIES_DATA[id][curr] хранится как {prices, dividends}, а
+        // getFilteredSeriesArray() разворачивает total-return-кривую
+        // (qty=1 на дате «от», на каждой ex-date qty растёт).
+        {id:'bp', name:'British Petroleum', color:'#F56E8E', seed:1},
+        {id:'shell', name:'Shell', color:'#F9AC8B', seed:2}
       ]
     },
     {
       id:'banks', title:'Банки', dot:'#5786FF',
       items:[
-        {id:'banks-1', name:'Тест 1', color:'#5786FF', seed:4},
-        {id:'banks-2', name:'Тест 2', color:'#04AEAE', seed:5},
-        {id:'banks-3', name:'Тест 3', color:'#3DC489', seed:6}
+        {id:'jpm',      name:'JPMorgan Chase', color:'#5786FF', seed:2},
+        {id:'barclays', name:'Barclays',       color:'#04AEAE', seed:3}
       ]
     },
     {
       id:'idx', title:'Индексы', dot:'#6f3ff5',
       items:[
-        {id:'idx-1', name:'Тест 1', color:'#6f3ff5', seed:7},
-        {id:'idx-2', name:'Тест 2', color:'#9CA3FF', seed:8},
-        {id:'idx-3', name:'Тест 3', color:'#5EEAD4', seed:9}
+        // seed нужен только для генерации временной демо-кривой до подмены
+        // реальными данными из data/mcftr_*.js — после подмены он не используется.
+        {id:'mcftr', name:'Индекс МосБиржи/РТС полной доходности', color:'#6f3ff5', seed:7},
+        {id:'msci',  name:'MSCI Emerging Markets', color:'#9CA3FF', seed:8}
       ]
     }
   ];
@@ -218,7 +265,7 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
   function genDemoForSeed(seed){
     const rub=[];
     const usd=[];
-    const start=new Date(2007,0,1);
+    const start=new Date(2014,0,1);
     const end=new Date();
     const rnd=mulberry32(seed*9973+17);
     const rndUsd=mulberry32(seed*4973+91);
@@ -241,38 +288,158 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
   const SERIES_DATA={};
   ALL_ITEMS.forEach(it=>{SERIES_DATA[it.id]=genDemoForSeed(it.seed);});
 
-  const dataMinIso=SERIES_DATA[ALL_ITEMS[0].id].RUB[0].date;
-  const dataMaxIso=SERIES_DATA[ALL_ITEMS[0].id].RUB[SERIES_DATA[ALL_ITEMS[0].id].RUB.length-1].date;
+  // Подменяем демо-данные реальными значениями (если для серии есть файл в data/).
+  // Файлы data/<id>_rub.js и data/<id>_usd.js регистрируют window.SERIES_REAL[id].{RUB|USD}.
+  // Если для какой-то валюты ключ присутствует (даже пустым массивом) — он используется,
+  // и серия в этой валюте показывает только реальные точки (или ничего, если массив пуст,
+  // как сейчас в data/mcftr_usd.js — пока ждём RTSTR).
+  if(window.SERIES_REAL){
+    Object.keys(window.SERIES_REAL).forEach(function(id){
+      var real=window.SERIES_REAL[id];
+      if(!real) return;
+      // Гарантируем, что запись в SERIES_DATA существует
+      // (нужно для серий, добавленных в SERIES_GROUPS, но не имеющих demo-seed).
+      if(!SERIES_DATA[id]) SERIES_DATA[id]={};
+      if(real.RUB) SERIES_DATA[id].RUB = real.RUB;
+      if(real.USD) SERIES_DATA[id].USD = real.USD;
+    });
+  }
+
+  // Глобальные границы дат — берём по объединению всех серий в RUB,
+  // чтобы dataMin/MaxIso покрывали всё, что есть в SERIES_DATA.
+  // Поддерживаем оба формата хранения серии:
+  //   - массив [{date, value}]            (mcftr и т.п.)
+  //   - объект {prices, dividends}         (bp и подобные с реинвестом)
+  function _pricesArrOf(v){
+    if(!v) return [];
+    return Array.isArray(v) ? v : (v.prices||[]);
+  }
+  let _gminIso=null,_gmaxIso=null;
+  ALL_ITEMS.forEach(function(it){
+    const d=SERIES_DATA[it.id]; if(!d) return;
+    const a=_pricesArrOf(d.RUB||d.USD);
+    if(!a.length) return;
+    const f=a[0].date, l=a[a.length-1].date;
+    if(_gminIso===null || f<_gminIso) _gminIso=f;
+    if(_gmaxIso===null || l>_gmaxIso) _gmaxIso=l;
+  });
+  const _today=new Date();
+  const _todayIso=_today.getFullYear()+'-'+String(_today.getMonth()+1).padStart(2,'0')+'-'+String(_today.getDate()).padStart(2,'0');
+  const dataMinIso=_gminIso||'2014-01-01';
+  const dataMaxIso=_gmaxIso||_todayIso;
   const dataMinTs=new Date(dataMinIso+'T00:00:00').getTime();
   const dataMaxTs=new Date(dataMaxIso+'T00:00:00').getTime();
 
   // ===== СОСТОЯНИЕ =====
-  // По умолчанию активна одна серия — Нефть и газ → Тест 1, валюта — RUB.
-  const visibleSet=new Set(['oil-1']);
+  // По умолчанию активна одна серия — Индексы → MCFTR (реальные данные), валюта — RUB.
+  const visibleSet=new Set(['bp','jpm','mcftr']);
   const opacityState={};
   ALL_ITEMS.forEach(it=>{opacityState[it.id]=visibleSet.has(it.id)?1:0;});
-  let activeCurrency='RUB';
+  let activeCurrency='USD';
   let isCurrencyTransitioning=false;
 
-  function getSeriesArray(id){
-    const d=SERIES_DATA[id];
-    return d?(d[activeCurrency]||d.RUB||[]):[];
+  // Активный интервал = выбранный пользователем период (через кнопку или
+  // календарь). Все точки до activeFromIso и после activeToIso ИГНОРИРУЮТСЯ
+  // полностью: они не попадают в серию ECharts, не учитываются в Y-оси и в
+  // подсказке. База нормализации = первая точка серии внутри [from..to].
+  let activeFromIso=null; // инициализируется ниже после periodToRange
+  let activeToIso=null;
+
+  /** Сырой массив цен серии в активной валюте (без фильтрации по интервалу
+   *  и без реинвеста). Поддерживает оба формата SERIES_DATA[id][curr]:
+   *    - простой:     массив [{date, value}]
+   *    - расширенный: объект {prices: [{date, value}], dividends: [{...}]} */
+  function getRawPrices(id){
+    const d=SERIES_DATA[id]; if(!d)return [];
+    const v=d[activeCurrency]||d.RUB||d.USD;
+    if(!v)return [];
+    return Array.isArray(v) ? v : (v.prices||[]);
+  }
+  /** Список дивидендных событий серии в активной валюте (или [] если их нет).
+   *  Каждый элемент: {dividend, lastBuy, exDate} в ISO-датах. */
+  function getRawDividends(id){
+    const d=SERIES_DATA[id]; if(!d)return [];
+    const v=d[activeCurrency]||d.RUB||d.USD;
+    if(!v||Array.isArray(v))return [];
+    return v.dividends||[];
+  }
+  // Совместимость: иногда нужен «сырой» массив без обработки.
+  function getSeriesArray(id){return getRawPrices(id);}
+
+  /** Точки серии, попадающие в активный интервал [activeFromIso..activeToIso].
+   *
+   *  Для серий с реинвестом дивидендов (getRawDividends(id).length > 0)
+   *  здесь же строится «total-return»-кривая по схеме «умного» реинвеста:
+   *    1. На первой точке внутри интервала кол-во акций qty = 1.
+   *    2. Идём по дням. Когда наступает ex-date очередного дивиденда
+   *       (и его cum-date «Последняя дата приобретения» ВХОДИТ в активный
+   *       интервал — иначе мы не успели бы купить бумагу до cum-date), —
+   *       получаем дивиденд деньгами: cash = qty × dividend_per_share,
+   *       и тут же реинвестируем по цене этого же дня (можно покупать
+   *       дробные акции): qty += cash / price.
+   *    3. Каждая следующая выплата считается уже на увеличенный qty,
+   *       так что сложный процент работает корректно.
+   *
+   *  В выдаче value(t) = qty(t) × price(t) — это «стоимость пакета»
+   *  при стартовом капитале в одну акцию. После getNormalizedSeriesData()
+   *  она превращается в обычные % доходности (на старте 0%). */
+  function getFilteredSeriesArray(id){
+    const prices=getRawPrices(id);
+    if(!prices||!prices.length)return [];
+
+    const fromIso=activeFromIso||'';
+    const toIso  =activeToIso  ||'9999-12-31';
+    const filtered=prices.filter(function(p){return p.date>=fromIso && p.date<=toIso;});
+    if(!filtered.length)return [];
+
+    const divs=getRawDividends(id);
+    if(!divs||!divs.length) return filtered.slice();
+
+    // Берём только те выплаты, чья cum-date попадает в активный интервал
+    // (значит «Последняя дата приобретения» позволяет нам получить дивиденд).
+    // Сортируем по exDate, чтобы применять по порядку.
+    const events=divs
+      .filter(function(d){return d.lastBuy>=fromIso && d.lastBuy<=toIso;})
+      .slice()
+      .sort(function(a,b){return a.exDate.localeCompare(b.exDate);});
+
+    let qty=1, divIdx=0;
+    return filtered.map(function(p){
+      // Все события с exDate <= p.date уже наступили — реинвестируем
+      // их по цене этого дня (на ex-date цена уже включает «отскок» вниз
+      // на величину дивиденда — это корректная цена покупки на реинвест).
+      while(divIdx<events.length && events[divIdx].exDate<=p.date){
+        const e=events[divIdx];
+        if(p.value>0) qty += (qty*e.dividend)/p.value;
+        divIdx++;
+      }
+      return {date:p.date, value: qty*p.value};
+    });
   }
 
-  function currencySymbol(){return activeCurrency==='USD'?'$':'₽';}
-  function currencyFractionDigits(){return activeCurrency==='USD'?4:2;}
+  /** База нормализации = первая точка серии внутри активного интервала. */
+  function getBaseValue(seriesId){
+    const arr=getFilteredSeriesArray(seriesId);
+    if(!arr||!arr.length)return null;
+    return arr[0].value>0?arr[0].value:null;
+  }
 
-  function formatValueWithCurrency(v){
+  /** Массив [date, percentChange] для серии относительно базы.
+   *  В выдаче — только точки внутри активного интервала. */
+  function getNormalizedSeriesData(seriesId){
+    const arr=getFilteredSeriesArray(seriesId);
+    const base=getBaseValue(seriesId);
+    if(!base)return arr.map(p=>[p.date,0]);
+    return arr.map(p=>[p.date, ((p.value/base)-1)*100]);
+  }
+
+  function formatPercent(v,fd){
     if(typeof v!=='number'||!isFinite(v))return String(v);
-    const fd=currencyFractionDigits();
-    return v.toLocaleString('ru-RU',{maximumFractionDigits:fd,minimumFractionDigits:Math.min(2,fd)})+' '+currencySymbol();
+    const f=fd==null?2:fd;
+    const sign=v>0?'+':'';
+    return sign+v.toLocaleString('ru-RU',{maximumFractionDigits:f,minimumFractionDigits:f})+'%';
   }
-
-  function formatYAxisValue(v){
-    if(typeof v!=='number'||!isFinite(v))return String(v);
-    const fd=currencyFractionDigits();
-    return Number(v).toLocaleString('ru-RU',{maximumFractionDigits:fd});
-  }
+  function formatYAxisValue(v){return formatPercent(v,1);}
 
   // ===== УТИЛИТЫ =====
   function fmtDateRu(iso){const [y,m,d]=iso.split('-');return d+'.'+m+'.'+y;}
@@ -294,23 +461,31 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     return [fromIso,toIso];
   }
 
-  /** min/max Y по точкам в [fromIso..toIso] СРЕДИ ВИДИМЫХ серий В ТЕКУЩЕЙ ВАЛЮТЕ + паддинг. */
+  /** min/max нормализованной (% доходности) среди видимых серий в видимом окне [fromIso..toIso] + паддинг.
+   *  fromIso / toIso — это окно зума ВНУТРИ активного интервала (для авто-подгонки Y-оси
+   *  при колесе/слайдере). Сами данные серии уже отфильтрованы под активный интервал. */
   function computeYRange(fromIso,toIso){
     let mn=Infinity,mx=-Infinity;
     visibleSet.forEach(id=>{
-      const arr=getSeriesArray(id);
+      const arr=getFilteredSeriesArray(id);
       if(!arr||!arr.length)return;
+      const base=getBaseValue(id);
+      if(!base)return;
       for(let i=0;i<arr.length;i++){
         const p=arr[i];
         if(p.date<fromIso)continue;
         if(p.date>toIso)break;
-        if(p.value<mn)mn=p.value;
-        if(p.value>mx)mx=p.value;
+        const norm=((p.value/base)-1)*100;
+        if(norm<mn)mn=norm;
+        if(norm>mx)mx=norm;
       }
     });
     if(!isFinite(mn)||!isFinite(mx))return null;
+    // Включаем 0 (базовая линия) в диапазон.
+    if(mn>0)mn=0;
+    if(mx<0)mx=0;
     if(mn===mx){const pad=Math.abs(mn)*0.05+1;return {min:mn-pad,max:mx+pad};}
-    const pad=(mx-mn)*0.06;
+    const pad=(mx-mn)*0.08;
     return {min:mn-pad,max:mx+pad};
   }
 
@@ -341,10 +516,13 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
 
   // Стартовое окно зума и Y-диапазон считаем заранее, чтобы первая отрисовка
   // была сразу в нужном масштабе и без «прыжка» от полного диапазона.
-  const initialPeriod='1Y';
+  const initialPeriod='Y2014';
   const [initFromIso,initToIso]=periodToRange(initialPeriod);
   const initFromTs=isoToTs(initFromIso);
   const initToTs=isoToTs(initToIso);
+  // Активный интервал по умолчанию — выбранный стартовый период.
+  activeFromIso=initFromIso;
+  activeToIso=initToIso;
   const initY=computeYRange(initFromIso,initToIso)||{min:null,max:null};
 
   /** Конвертирует hex (#RRGGBB) в rgba(...) с заданной прозрачностью. */
@@ -388,9 +566,36 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
       },
       z:op>0?10:1,
       silent:op<=0,
-      data:getSeriesArray(item.id).map(p=>[p.date,p.value])
+      data:getNormalizedSeriesData(item.id)
     };
   }
+
+  // ===== КЕШ НОРМАЛИЗОВАННЫХ ДАННЫХ ДЛЯ ТУЛТИПА =====
+  // Объявляем здесь (до baseOption), чтобы formatter и refreshNormCache
+  // были доступны в момент первого вызова.
+  const SERIES_NORM_CACHE={};
+
+  function refreshNormCache(){
+    ALL_ITEMS.forEach(function(item){
+      SERIES_NORM_CACHE[item.id]=getNormalizedSeriesData(item.id);
+    });
+  }
+
+  /** Бинарный поиск: последнее значение в normData с date <= iso.
+   *  normData = [[isoDate, pct], ...] отсортирован по дате. */
+  function findNearestValue(normData,iso){
+    if(!normData||!normData.length)return null;
+    let lo=0,hi=normData.length-1,res=null;
+    while(lo<=hi){
+      const mid=(lo+hi)>>1;
+      if(normData[mid][0]<=iso){res=normData[mid][1];lo=mid+1;}
+      else{hi=mid-1;}
+    }
+    return res;
+  }
+
+  // Инициализируем кеш ДО первой отрисовки
+  refreshNormCache();
 
   const baseOption={
     color:['#6f3ff5'],
@@ -415,24 +620,42 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
       transitionDuration:0.2,
       formatter:function(params){
         if(!params||!params.length)return '';
-        const visible=params.filter(p=>visibleSet.has(p.seriesId));
-        if(!visible.length)return '';
-        const iso=(typeof visible[0].value[0]==='string')?visible[0].value[0]:tsToIso(new Date(visible[0].value[0]).getTime());
-        let html='<div style="font-size:11px;color:#8a8a96;margin-bottom:6px">'+fmtDateRu(iso)+'</div>';
-        visible.forEach(p=>{
+        // Берём дату из первого пришедшего параметра (любая серия).
+        // Для каждой ВИДИМОЙ серии затем ищем ближайшую точку ≤ этой дате
+        // из кеша — это позволяет показывать все серии независимо от того,
+        // есть ли у них точка именно на эту дату (разные торговые дни).
+        const firstVal=params[0].value;
+        const iso=(typeof firstVal[0]==='string')?firstVal[0]:tsToIso(firstVal[0]);
+        const baseLabel='от '+fmtDateRu(activeFromIso||'');
+        let html='<div style="font-size:11px;color:#8a8a96;margin-bottom:6px;display:flex;justify-content:space-between;gap:14px">'+
+                    '<span style="opacity:.85">'+baseLabel+'</span>'+
+                    '<span>'+fmtDateRu(iso)+'</span>'+
+                 '</div>';
+        let hasAny=false;
+        ALL_ITEMS.forEach(function(item){
+          if(!visibleSet.has(item.id))return;
+          const nd=SERIES_NORM_CACHE[item.id];
+          const v=findNearestValue(nd,iso);
+          if(v===null||v===undefined)return;
+          hasAny=true;
+          const color=(typeof v==='number'&&v<0)?'#d04343':'#1f8a4d';
+          const pct=formatPercent(typeof v==='number'?v:0,2);
           html+='<div style="display:flex;align-items:center;gap:8px;margin-top:2px">'+
-                  '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+p.color+'"></span>'+
-                  '<span style="color:#111;font-weight:600">'+p.seriesName+'</span>'+
-                  '<span style="color:#111;margin-left:auto">'+formatValueWithCurrency(p.value[1])+'</span>'+
+                  '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;background:'+item.color+'"></span>'+
+                  '<span style="color:#111;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px" title="'+item.name+'">'+item.name+'</span>'+
+                  '<span style="margin-left:auto;padding-left:8px;color:'+color+';font-weight:600;flex-shrink:0">'+pct+'</span>'+
                 '</div>';
         });
-        return html;
+        return hasAny?html:'';
       }
     },
     xAxis:{
       type:'time',
-      min:dataMinTs,
-      max:dataMaxTs,
+      // Стартовые границы оси = выбранный по умолчанию период (initialPeriod).
+      // Это сразу запрещает зум-out за пределы стартового интервала.
+      // При смене периода эти границы перевычисляются в lockXAxisTo().
+      min:initFromTs,
+      max:initToTs,
       axisLine:{lineStyle:{color:'#ececf2'}},
       axisTick:{show:false},
       axisLabel:{color:'#8a8a96',fontSize:11,hideOverlap:true},
@@ -526,8 +749,11 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     });
   }
 
-  /** Плавный переход к диапазону [fromIso..toIso] за `duration` мс. */
-  function animatedZoom(fromIso,toIso,duration){
+  /** Плавный переход к диапазону [fromIso..toIso] за `duration` мс.
+   *  `onComplete` — необязательный callback, вызывается после завершения
+   *  анимации (используется в applyPeriod / onDateChange для жёсткой
+   *  блокировки оси X границами выбранного периода). */
+  function animatedZoom(fromIso,toIso,duration,onComplete){
     const [a,b]=clampRange(fromIso,toIso);
     const targetFromTs=isoToTs(a);
     const targetToTs=isoToTs(b);
@@ -544,6 +770,7 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     const yChanged=(yDelta/yScale)>0.001;
     if(!xChanged && !yChanged){
       applySnapshot(targetFromTs,targetToTs,targetY.min,targetY.max);
+      if(onComplete)onComplete();
       return;
     }
 
@@ -564,6 +791,7 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
       }else{
         animFrameId=null;
         isProgrammaticZoom=false;
+        if(onComplete)onComplete();
       }
     }
     animFrameId=requestAnimationFrame(step);
@@ -582,11 +810,51 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     });
   }
 
+  /** Подменить data всех серий нормализованными значениями (для текущей базы и валюты).
+   *  Передаём ПОЛНУЮ конфигурацию серии (через buildSeriesEntry), чтобы ECharts
+   *  гарантированно обновил data — частичный merge {id,data} в некоторых случаях
+   *  не приводит к перерисовке точек. */
+  function rebuildAllSeriesData(){
+    refreshNormCache();
+    chart.setOption({
+      series:ALL_ITEMS.map(buildSeriesEntry)
+    });
+    renderResultsTable();
+  }
+
+  /** Установить новый активный интервал и плавно зазумиться к нему.
+   *  При смене активного интервала ВСЕ точки серии вне [from..to] выкидываются
+   *  из данных ECharts, нормализация считается заново от первой точки внутри. */
+  function setActiveRangeAndZoom(fromIso,toIso,duration,onComplete){
+    if(fromIso!==activeFromIso || toIso!==activeToIso){
+      activeFromIso=fromIso;
+      activeToIso=toIso;
+      rebuildAllSeriesData();
+    }
+    animatedZoom(fromIso,toIso,duration,onComplete);
+  }
+
+  /** Жёстко ограничить ось X выбранным интервалом, чтобы пользовательский
+   *  zoom-out не выходил за его границы (т.е. нельзя случайно увидеть
+   *  данные ДО даты «от» выбранного периода). */
+  function lockXAxisTo(fromIso,toIso){
+    const [a,b]=clampRange(fromIso,toIso);
+    chart.setOption({xAxis:{min:isoToTs(a),max:isoToTs(b)}});
+  }
+
   function applyPeriod(period){
     const [from,to]=periodToRange(period);
     activePeriod=period;
     setActiveButton(period);
-    animatedZoom(from,to);
+    // На время анимации снимаем ограничения оси, чтобы плавно дойти к новым
+    // границам (например, при переходе с узкого периода на широкий).
+    chart.setOption({xAxis:{min:dataMinTs,max:dataMaxTs}});
+    const myPeriod=period;
+    setActiveRangeAndZoom(from,to,undefined,function(){
+      // Если за время анимации пользователь не выбрал другой период —
+      // ограничиваем ось X границами этого.
+      if(activePeriod===myPeriod) lockXAxisTo(from,to);
+    });
   }
 
   // ===== СОБЫТИЯ КНОПОК / ДАТ =====
@@ -596,19 +864,20 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     applyPeriod(btn.dataset.period);
   });
 
-  // Двойной клик — плавный возврат к текущему периоду (или ко всему диапазону).
+  // Двойной клик — плавный возврат к границам активного интервала
+  // (т.е. к тому, что выбрано кнопкой или календарём; зум внутри сбрасывается).
   dom.addEventListener('dblclick',function(){
-    if(activePeriod){
-      const [from,to]=periodToRange(activePeriod);
-      animatedZoom(from,to);
-    }else{
-      animatedZoom(dataMinIso,dataMaxIso);
-    }
+    if(activeFromIso&&activeToIso) animatedZoom(activeFromIso,activeToIso);
   });
 
   window.addEventListener('resize',function(){chart.resize()});
 
-  // Пользовательский зум (колесо/слайдер): синхронизируем поля и Y-ось мгновенно.
+  // Пользовательский зум (колесо/слайдер/drag): подстраиваем только Y-ось.
+  // Поля «от» / «по» НЕ трогаем — они отражают именно ту дату, которую
+  // пользователь сам задал кнопкой или календарём. То же самое и с базой
+  // нормализации: она пересчитывается только при явной смене даты.
+  // Активная кнопка периода тоже сохраняется (зум — это просто разглядывание
+  // деталей внутри выбранного периода, не его изменение).
   chart.on('dataZoom',function(){
     if(isProgrammaticZoom)return;
     if(zoomEventTimer)clearTimeout(zoomEventTimer);
@@ -618,9 +887,6 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
       const toIso=tsToIso(cur.toTs);
       const yr=computeYRange(fromIso,toIso);
       if(yr)chart.setOption({yAxis:{min:yr.min,max:yr.max}});
-      setDateInputs(fromIso,toIso);
-      activePeriod='';
-      setActiveButton('');
     },80);
   });
 
@@ -634,7 +900,12 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     const toIso=parseDateRu(toStr)||dataMaxIso;
     activePeriod='';
     setActiveButton('');
-    animatedZoom(fromIso,toIso);
+    // На время анимации снимаем ограничения оси.
+    chart.setOption({xAxis:{min:dataMinTs,max:dataMaxTs}});
+    setActiveRangeAndZoom(fromIso,toIso,undefined,function(){
+      // После окончания анимации — ограничиваем ось X выбранным интервалом.
+      lockXAxisTo(fromIso,toIso);
+    });
   }
 
   fpFrom=flatpickr('#dateFrom',{
@@ -694,6 +965,7 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
       visibleSet.add(item.id);
       animateSeriesOpacity(item,1);
     }
+    renderResultsTable();
     // Y-ось плавно подстраиваем под новый набор видимых серий.
     const cur=readCurrentZoom();
     animatedZoom(tsToIso(cur.fromTs),tsToIso(cur.toTs),320);
@@ -707,18 +979,139 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     SERIES_GROUPS.forEach(g=>{
       const groupEl=document.createElement('div');
       groupEl.className='series-group';
-      groupEl.innerHTML=
-        '<div class="series-group-title">'+g.title+'</div>'+
-        '<div class="series-chips">'+
-          g.items.map(it=>(
+      const chipsHtml = g.items.length
+        ? g.items.map(it=>(
             '<button type="button" class="series-chip'+(visibleSet.has(it.id)?' active':'')+'" '+
               'data-id="'+it.id+'" style="--c:'+it.color+'">'+it.name+'</button>'
-          )).join('')+
-        '</div>';
+          )).join('')
+        : '<div class="series-empty">скоро</div>';
+      groupEl.innerHTML=
+        '<div class="series-group-title">'+g.title+'</div>'+
+        '<div class="series-chips">'+chipsHtml+'</div>';
       panel.appendChild(groupEl);
     });
   }
   renderSeriesPanel();
+
+  // ===== ТАБЛИЦА РЕЗУЛЬТАТОВ =====
+  // Живые DOM-строки, чтобы добавление/удаление анимировались плавно.
+  // resultsRowMap: id → {tr, rankCell, retCell}
+  const resultsRowMap=new Map();
+  let resultsTableBody=null;
+  let resultsHeaderDates=null;
+
+  function _buildTableShell(wrap){
+    const fromLabel=activeFromIso?fmtDateRu(activeFromIso):'';
+    const toLabel=activeToIso?fmtDateRu(activeToIso):'';
+    wrap.innerHTML=
+      '<table class="results-table">'+
+        '<thead><tr>'+
+          '<th class="num">#</th>'+
+          '<th>Инструмент</th>'+
+          '<th class="num rt-header-dates">Доходность '+fromLabel+' — '+toLabel+'</th>'+
+        '</tr></thead>'+
+        '<tbody id="resultsTableBody"></tbody>'+
+      '</table>';
+    resultsTableBody=document.getElementById('resultsTableBody');
+    resultsHeaderDates=wrap.querySelector('.rt-header-dates');
+  }
+
+  function _makeRow(row,rank){
+    const tr=document.createElement('tr');
+    const v=row.val;
+    const cls=v>0.005?'pos':v<-0.005?'neg':'zero';
+    const sign=v>0?'+':'';
+    const pct=sign+v.toLocaleString('ru-RU',{maximumFractionDigits:2,minimumFractionDigits:2})+'%';
+    tr.innerHTML=
+      '<td class="rank">'+rank+'</td>'+
+      '<td><div class="name-cell">'+
+        '<span class="dot" style="background:'+row.item.color+'"></span>'+
+        '<span class="sname">'+row.item.name+'</span>'+
+        '<span class="cluster">'+row.cluster+'</span>'+
+      '</div></td>'+
+      '<td class="ret '+cls+'">'+pct+'</td>';
+    return tr;
+  }
+
+  function _updateRow(data,row,rank){
+    const v=row.val;
+    const cls=v>0.005?'pos':v<-0.005?'neg':'zero';
+    const sign=v>0?'+':'';
+    const pct=sign+v.toLocaleString('ru-RU',{maximumFractionDigits:2,minimumFractionDigits:2})+'%';
+    data.tr.cells[0].textContent=rank;
+    const retCell=data.tr.cells[2];
+    retCell.textContent=pct;
+    retCell.className='ret '+cls;
+  }
+
+  function renderResultsTable(){
+    const wrap=document.getElementById('resultsTableWrap');
+    if(!wrap)return;
+
+    // Собираем видимые серии с данными
+    const rows=[];
+    ALL_ITEMS.forEach(function(item){
+      if(!visibleSet.has(item.id))return;
+      const nd=SERIES_NORM_CACHE[item.id];
+      if(!nd||!nd.length)return;
+      const finalVal=nd[nd.length-1][1];
+      const group=SERIES_GROUPS.find(function(g){return g.items.some(function(x){return x.id===item.id;});});
+      rows.push({item:item,val:finalVal,cluster:group?group.title:''});
+    });
+    rows.sort(function(a,b){return b.val-a.val;});
+
+    // Убедимся что скелет таблицы существует
+    if(!resultsTableBody||!document.getElementById('resultsTableBody')){
+      _buildTableShell(wrap);
+      resultsRowMap.clear();
+    }
+
+    // Обновим заголовок с датами
+    if(resultsHeaderDates){
+      const fl=activeFromIso?fmtDateRu(activeFromIso):'';
+      const tl=activeToIso?fmtDateRu(activeToIso):'';
+      resultsHeaderDates.textContent='Доходность '+fl+' — '+tl;
+    }
+
+    const newIds=new Set(rows.map(function(r){return r.item.id;}));
+
+    // Убираем строки которых нет в новом списке
+    resultsRowMap.forEach(function(data,id){
+      if(!newIds.has(id)){
+        const tr=data.tr;
+        tr.classList.add('rt-exit');
+        setTimeout(function(){
+          if(tr.parentNode)tr.parentNode.removeChild(tr);
+          resultsRowMap.delete(id);
+        },290);
+      }
+    });
+
+    // Добавляем новые / обновляем существующие
+    rows.forEach(function(row,i){
+      const id=row.item.id;
+      if(!resultsRowMap.has(id)){
+        const tr=_makeRow(row,i+1);
+        tr.classList.add('rt-enter');
+        resultsTableBody.appendChild(tr);
+        resultsRowMap.set(id,{tr:tr});
+        // Один RAF: снимаем enter-класс → браузер проиграет transition
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){tr.classList.remove('rt-enter');});
+        });
+      }else{
+        _updateRow(resultsRowMap.get(id),row,i+1);
+      }
+    });
+
+    // Переставляем строки в tbody в нужном порядке (без анимации позиции)
+    rows.forEach(function(row){
+      const data=resultsRowMap.get(row.item.id);
+      if(data&&data.tr.parentNode)resultsTableBody.appendChild(data.tr);
+    });
+  }
+
+  renderResultsTable();
 
   document.getElementById('seriesPanel').addEventListener('click',function(e){
     const btn=e.target.closest('.series-chip');
@@ -752,12 +1145,8 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
     visibleItems.forEach(it=>animateSeriesOpacity(it,0));
 
     setTimeout(function(){
-      // 2) Подменяем данные у ВСЕХ серий и Y-ось — мгновенно (всё уже невидимо).
-      const newSeries=ALL_ITEMS.map(it=>({
-        id:it.id,
-        data:getSeriesArray(it.id).map(p=>[p.date,p.value])
-      }));
-      chart.setOption({series:newSeries});
+      // 2) Пересчитываем нормализованные данные в новой валюте.
+      rebuildAllSeriesData();
       const cur=readCurrentZoom();
       const fromIso=tsToIso(cur.fromTs);
       const toIso=tsToIso(cur.toTs);
