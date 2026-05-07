@@ -219,6 +219,8 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
 <script src="hsbc.js?v=1"></script>
 <script src="shell.js?v=1"></script>
 <script src="barclays.js?v=1"></script>
+<script src="chevron.js?v=1"></script>
+<script src="tte.js?v=1"></script>
 
 <script>
 (function(){
@@ -237,9 +239,11 @@ body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif
         // SERIES_DATA[id][curr] хранится как {prices, dividends}, а
         // getFilteredSeriesArray() разворачивает total-return-кривую
         // (qty=1 на дате «от», на каждой ex-date qty растёт).
-        {id:'bp',    name:'British Petroleum', color:'#F56E8E', seed:1},
-        {id:'shell', name:'Shell',             color:'#F9AC8B', seed:2},
-        {id:'exxon', name:'Exxon Mobil',       color:'#E8B431', seed:3}
+        {id:'bp',      name:'British Petroleum', color:'#F56E8E', seed:1},
+        {id:'shell',   name:'Shell',             color:'#F9AC8B', seed:2},
+        {id:'exxon',   name:'Exxon Mobil',       color:'#E8B431', seed:3},
+        {id:'chevron', name:'Chevron',            color:'#4FACFE', seed:4},
+        {id:'tte',     name:'TotalEnergies',      color:'#C84B31', seed:5}
       ]
     },
     {
