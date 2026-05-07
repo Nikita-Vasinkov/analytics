@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Аналитика — БПИФы АТОН</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{scrollbar-gutter:stable}
+body{font-family:"Graphik","Inter","Segoe UI",system-ui,-apple-system,sans-serif;background:#f0f3f8;color:#111;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+.header{background:#000;border-bottom:1px solid #e6e6ef;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.header-logo{height:36px;width:auto;display:block}
+.header-title{color:#fff;font-size:.9rem;font-weight:500;letter-spacing:.02em;opacity:.85}
+
+.s{max-width:1040px;margin:32px auto 36px;background:#fff;border-radius:10px;border:1px solid #ececf2;overflow:hidden}
+
+.sh{position:relative;background:#fff;border-bottom:1px solid #ececf2;padding:16px 28px;display:flex;flex-direction:column;align-items:stretch;gap:12px;overflow:hidden}
+.sh::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:8px;border-radius:0 4px 4px 0;background:#6f3ff5;transition:all .2s}
+.sh-row{position:relative;z-index:2;display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.sh-row-top{justify-content:space-between}
+.sh-row-bottom{justify-content:space-between;gap:14px}
+.sh h2{font-size:1rem;font-weight:600;color:#111}
+
+.period-dates{display:flex;align-items:center;gap:8px;font-size:.75rem;color:#666}
+.period-dates input{color:#333;text-align:center;border:1px solid #d9d9e6;padding:6px 10px;border-radius:999px;font-size:.75rem;background:#fff;width:108px;cursor:pointer;font-family:inherit}
+.period-dates input:hover{border-color:#6f3ff5}
+
+.period-btns{display:flex;gap:4px;flex-wrap:wrap}
+.period-btn{padding:4px 12px;border-radius:999px;border:1px solid #ececf2;background:#f1f1f7;color:#333;font-size:.7rem;cursor:pointer;font-family:inherit;font-weight:600;transition:.15s}
+.period-btn:hover{background:#6f3ff5;color:#fff;border-color:#6f3ff5}
+.period-btn.active{background:#6f3ff5;color:#fff;border-color:#6f3ff5}
+.period-btn-sep{width:1px;align-self:stretch;background:#ececf2;margin:2px 4px}
+
+.curr-toggle{display:inline-flex;align-items:center;border-radius:999px;border:1px solid #d0d5e0;background:#fafafe;padding:3px 4px;gap:2px;flex-shrink:0}
+.curr-toggle-opt{background:transparent;border:none;padding:5px 12px;border-radius:999px;font-size:.7rem;font-weight:600;font-family:inherit;cursor:pointer;color:#8a8a96;transition:.15s}
+.curr-toggle-opt:hover{color:#6b6b7a}
+.curr-toggle-opt.active{background:#fff;color:#6f3ff5;box-shadow:0 0 0 1px rgba(111,63,245,.15)}
+.curr-toggle-sep{color:#c5c5ce;font-weight:500;font-size:.72rem;user-select:none;padding:0 1px}
+
+.chart-wrap{padding:18px 18px 24px}
+#chart{width:100%;height:520px}
+
+.series-panel{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #ececf2;background:#fff}
+.series-group{padding:16px 22px;border-right:1px solid #ececf2;min-width:0}
+.series-group:last-child{border-right:none}
+.series-group-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#8a8a96;font-weight:600;margin-bottom:12px}
+.series-chips{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.series-chip{align-self:flex-start}
+.series-chip{
+  --c:#999;
+  position:relative;padding:5px 12px 5px 10px;border-radius:999px;
+  border:1px solid #ececf2;background:#fafafe;color:#6b6b7a;
+  font-size:.72rem;font-family:inherit;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;
+  transition:background .2s ease,color .2s ease,border-color .2s ease,box-shadow .25s ease,transform .15s ease
+}
+.series-chip::before{
+  content:'';width:7px;height:7px;border-radius:50%;background:var(--c);
+  opacity:.55;transition:opacity .2s ease,box-shadow .2s ease,background .2s ease
+}
+.series-chip:hover{border-color:var(--c);color:#111;background:#fff}
+.series-chip:hover::before{opacity:1;box-shadow:0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent)}
+.series-chip.active{
+  background:var(--c);color:#fff;border-color:var(--c);
+  box-shadow:0 4px 14px -4px color-mix(in srgb, var(--c) 65%, transparent)
+}
+.series-chip.active::before{background:#fff;opacity:1;box-shadow:none}
+.series-chip:active{transform:translateY(1px)}
+
+.legend-note{padding:12px 28px;font-size:.74rem;color:#9aa1ad;border-top:1px solid #ececf2;background:#fafafe}
+.legend-note .hint{display:inline-block;margin-right:14px}
+.legend-note .hint b{color:#6b6b7a;font-weight:600}
+
+.footer{text-align:center;padding:30px;color:#9aa1ad;font-size:.78rem}
+
+@media(max-width:768px){
+  body{font-size:13px}
+  .s{margin:12px 8px 0;border-radius:8px}
+  .header{padding:14px 16px}
+  .header-logo{height:30px}
+
+  .sh{padding:14px 18px;gap:10px}
+  .sh::before{left:0;top:6px;bottom:6px;width:6px}
+  .sh h2{font-size:.95rem}
+  .sh-row{gap:8px}
+  .sh-row-top,.sh-row-bottom{justify-content:flex-start}
+
+  .period-dates{font-size:.7rem;gap:6px}
+  .period-dates input{width:96px;padding:6px 9px;font-size:.7rem}
+
+  /* Кнопки крупнее, чтобы было удобно тыкать пальцем */
+  .period-btns{gap:5px;width:100%}
+  .period-btn{padding:7px 12px;font-size:.7rem}
+  .period-btn-sep{margin:2px 2px}
+
+  .curr-toggle{padding:2px 3px}
+  .curr-toggle-opt{padding:7px 11px;font-size:.7rem}
+
+  .chart-wrap{padding:14px 6px 18px}
+  #chart{height:340px}
+
+  .series-panel{grid-template-columns:1fr}
+  .series-group{padding:14px 18px;border-right:none;border-bottom:1px solid #ececf2}
+  .series-group:last-child{border-bottom:none}
+  .series-group-title{font-size:.66rem;margin-bottom:10px}
+  .series-chips{gap:8px}
+  .series-chip{padding:8px 14px 8px 12px;font-size:.78rem}
+  .series-chip::before{width:8px;height:8px}
+
+  .footer{padding:24px 16px;font-size:.72rem}
+}
+
+@media(max-width:480px){
+  .sh{padding:12px 14px}
+  .sh h2{font-size:.9rem}
+  .period-btn{padding:6px 10px;font-size:.66rem}
+  .period-dates input{width:88px;font-size:.68rem;padding:6px 7px}
+  .curr-toggle-opt{padding:6px 9px;font-size:.66rem}
+  #chart{height:300px}
+  .series-group{padding:12px 14px}
+  .chart-wrap{padding:12px 2px 14px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html"><img src="Logo.svg" alt="" class="header-logo" onerror="this.style.display='none'"></a>
+</div>
+
+<div class="s" id="analyticsBlock">
+  <div class="sh">
+    <div class="sh-row sh-row-top">
+      <h2>Аналитика</h2>
+      <div class="period-dates">
+        <span>от</span>
+        <input type="text" id="dateFrom" placeholder="ДД.ММ.ГГГГ" readonly>
+        <span>по</span>
+        <input type="text" id="dateTo" placeholder="ДД.ММ.ГГГГ" readonly>
+      </div>
+    </div>
+    <div class="sh-row sh-row-bottom">
+      <div class="curr-toggle" id="currToggle" role="group" aria-label="Валюта отображения">
+        <button type="button" class="curr-toggle-opt active" data-curr="RUB">RUB</button>
+        <span class="curr-toggle-sep">/</span>
+        <button type="button" class="curr-toggle-opt" data-curr="USD">USD</button>
+      </div>
+      <div class="period-btns" id="periodBtns">
+        <button class="period-btn" data-period="1W">1W</button>
+        <button class="period-btn" data-period="1M">1M</button>
+        <button class="period-btn active" data-period="1Y">1Y</button>
+        <button class="period-btn" data-period="YTD">С начала года</button>
+        <span class="period-btn-sep" aria-hidden="true"></span>
+        <button class="period-btn" data-period="Y2008">2008</button>
+        <button class="period-btn" data-period="Y2014">2014</button>
+        <button class="period-btn" data-period="Y2022">2022</button>
+        <span class="period-btn-sep" aria-hidden="true"></span>
+        <button class="period-btn" data-period="ALL">Всё</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div id="chart"></div>
+  </div>
+
+  <div class="series-panel" id="seriesPanel"></div>
+</div>
+
+<div class="footer">© АТОН</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ru.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script>
+(function(){
+  // ===== КЛАСТЕРЫ БУМАГ =====
+  // Позже сюда подставим реальные тикеры и данные.
+  const SERIES_GROUPS=[
+    {
+      id:'oil', title:'Нефть и газ', dot:'#F56E8E',
+      items:[
+        {id:'oil-1', name:'Тест 1', color:'#F56E8E', seed:1},
+        {id:'oil-2', name:'Тест 2', color:'#F9AC8B', seed:2},
+        {id:'oil-3', name:'Тест 3', color:'#E8B431', seed:3}
+      ]
+    },
+    {
+      id:'banks', title:'Банки', dot:'#5786FF',
+      items:[
+        {id:'banks-1', name:'Тест 1', color:'#5786FF', seed:4},
+        {id:'banks-2', name:'Тест 2', color:'#04AEAE', seed:5},
+        {id:'banks-3', name:'Тест 3', color:'#3DC489', seed:6}
+      ]
+    },
+    {
+      id:'idx', title:'Индексы', dot:'#6f3ff5',
+      items:[
+        {id:'idx-1', name:'Тест 1', color:'#6f3ff5', seed:7},
+        {id:'idx-2', name:'Тест 2', color:'#9CA3FF', seed:8},
+        {id:'idx-3', name:'Тест 3', color:'#5EEAD4', seed:9}
+      ]
+    }
+  ];
+
+  const ALL_ITEMS=SERIES_GROUPS.flatMap(g=>g.items);
+
+  // ===== ВРЕМЕННЫЕ ДЕМО-ДАННЫЕ =====
+  // Структура: SERIES_DATA[id] = { RUB: [{date, value}], USD: [{date, value}] }
+  // Позже подставим реальные значения (две пары цен — рубли и доллары) из таблиц.
+  function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;}}
+  function genDemoForSeed(seed){
+    const rub=[];
+    const usd=[];
+    const start=new Date(2007,0,1);
+    const end=new Date();
+    const rnd=mulberry32(seed*9973+17);
+    const rndUsd=mulberry32(seed*4973+91);
+    let v=40+seed*15+rnd()*30;
+    let u=v/85;
+    const drift=((seed%5)-2)*0.0009;
+    const vol=0.9+((seed*13)%7)*0.18;
+    const phase=seed*0.7;
+    for(let t=start.getTime(); t<=end.getTime(); t+=86400000){
+      const d=new Date(t);
+      v=Math.max(1, v + (rnd()-0.5+drift)*vol + Math.sin(t/1e10+phase)*0.5);
+      u=Math.max(0.05, u + (rndUsd()-0.5+drift*0.7)*vol*0.012 + Math.sin(t/1e10+phase+1)*0.006);
+      const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      rub.push({date:iso,value:+v.toFixed(2)});
+      usd.push({date:iso,value:+u.toFixed(4)});
+    }
+    return {RUB:rub,USD:usd};
+  }
+
+  const SERIES_DATA={};
+  ALL_ITEMS.forEach(it=>{SERIES_DATA[it.id]=genDemoForSeed(it.seed);});
+
+  const dataMinIso=SERIES_DATA[ALL_ITEMS[0].id].RUB[0].date;
+  const dataMaxIso=SERIES_DATA[ALL_ITEMS[0].id].RUB[SERIES_DATA[ALL_ITEMS[0].id].RUB.length-1].date;
+  const dataMinTs=new Date(dataMinIso+'T00:00:00').getTime();
+  const dataMaxTs=new Date(dataMaxIso+'T00:00:00').getTime();
+
+  // ===== СОСТОЯНИЕ =====
+  // По умолчанию активна одна серия — Нефть и газ → Тест 1, валюта — RUB.
+  const visibleSet=new Set(['oil-1']);
+  const opacityState={};
+  ALL_ITEMS.forEach(it=>{opacityState[it.id]=visibleSet.has(it.id)?1:0;});
+  let activeCurrency='RUB';
+  let isCurrencyTransitioning=false;
+
+  function getSeriesArray(id){
+    const d=SERIES_DATA[id];
+    return d?(d[activeCurrency]||d.RUB||[]):[];
+  }
+
+  function currencySymbol(){return activeCurrency==='USD'?'$':'₽';}
+  function currencyFractionDigits(){return activeCurrency==='USD'?4:2;}
+
+  function formatValueWithCurrency(v){
+    if(typeof v!=='number'||!isFinite(v))return String(v);
+    const fd=currencyFractionDigits();
+    return v.toLocaleString('ru-RU',{maximumFractionDigits:fd,minimumFractionDigits:Math.min(2,fd)})+' '+currencySymbol();
+  }
+
+  function formatYAxisValue(v){
+    if(typeof v!=='number'||!isFinite(v))return String(v);
+    const fd=currencyFractionDigits();
+    return Number(v).toLocaleString('ru-RU',{maximumFractionDigits:fd});
+  }
+
+  // ===== УТИЛИТЫ =====
+  function fmtDateRu(iso){const [y,m,d]=iso.split('-');return d+'.'+m+'.'+y;}
+  function isoFromDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function tsToIso(ts){return isoFromDate(new Date(ts));}
+  function isoToTs(iso){return new Date(iso+'T00:00:00').getTime();}
+  function parseDateRu(s){
+    const m=String(s||'').trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if(!m)return null;
+    const d=parseInt(m[1],10),mo=parseInt(m[2],10),y=parseInt(m[3],10);
+    if(d<1||d>31||mo<1||mo>12||y<1900||y>2100)return null;
+    return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  }
+
+  function clampRange(fromIso,toIso){
+    if(fromIso<dataMinIso)fromIso=dataMinIso;
+    if(toIso>dataMaxIso)toIso=dataMaxIso;
+    if(fromIso>toIso){const t=fromIso;fromIso=toIso;toIso=t;}
+    return [fromIso,toIso];
+  }
+
+  /** min/max Y по точкам в [fromIso..toIso] СРЕДИ ВИДИМЫХ серий В ТЕКУЩЕЙ ВАЛЮТЕ + паддинг. */
+  function computeYRange(fromIso,toIso){
+    let mn=Infinity,mx=-Infinity;
+    visibleSet.forEach(id=>{
+      const arr=getSeriesArray(id);
+      if(!arr||!arr.length)return;
+      for(let i=0;i<arr.length;i++){
+        const p=arr[i];
+        if(p.date<fromIso)continue;
+        if(p.date>toIso)break;
+        if(p.value<mn)mn=p.value;
+        if(p.value>mx)mx=p.value;
+      }
+    });
+    if(!isFinite(mn)||!isFinite(mx))return null;
+    if(mn===mx){const pad=Math.abs(mn)*0.05+1;return {min:mn-pad,max:mx+pad};}
+    const pad=(mx-mn)*0.06;
+    return {min:mn-pad,max:mx+pad};
+  }
+
+  function periodToRange(period){
+    const lastIso=dataMaxIso;
+    const last=new Date(lastIso+'T00:00:00');
+    let from;
+    if(period==='ALL')return [dataMinIso,lastIso];
+    if(period==='1W'){from=new Date(last);from.setDate(from.getDate()-7);}
+    else if(period==='1M'){from=new Date(last);from.setMonth(from.getMonth()-1);}
+    else if(period==='1Y'){from=new Date(last);from.setFullYear(from.getFullYear()-1);}
+    else if(period==='YTD'){from=new Date(last.getFullYear(),0,1);}
+    else if(period==='Y2008'){from=new Date(2008,0,1);}
+    else if(period==='Y2014'){from=new Date(2014,0,1);}
+    else if(period==='Y2022'){from=new Date(2022,0,1);}
+    else return [dataMinIso,lastIso];
+    return clampRange(isoFromDate(from),lastIso);
+  }
+
+  // ===== ИНИЦИАЛИЗАЦИЯ ГРАФИКА =====
+  const dom=document.getElementById('chart');
+  const chart=echarts.init(dom,null,{renderer:'canvas'});
+
+  // Определяем сенсорное устройство (телефон / планшет): на нём меняем
+  // поведение dataZoom (inside отключаем drag, чтобы страница скроллилась
+  // обычным свайпом), а слайдер делаем визуально пожирнее.
+  const isTouch=('ontouchstart' in window) || (window.matchMedia && window.matchMedia('(hover:none)').matches) || (navigator.maxTouchPoints||0)>0;
+
+  // Стартовое окно зума и Y-диапазон считаем заранее, чтобы первая отрисовка
+  // была сразу в нужном масштабе и без «прыжка» от полного диапазона.
+  const initialPeriod='1Y';
+  const [initFromIso,initToIso]=periodToRange(initialPeriod);
+  const initFromTs=isoToTs(initFromIso);
+  const initToTs=isoToTs(initToIso);
+  const initY=computeYRange(initFromIso,initToIso)||{min:null,max:null};
+
+  /** Конвертирует hex (#RRGGBB) в rgba(...) с заданной прозрачностью. */
+  function hexToRgba(hex,alpha){
+    const m=String(hex||'').replace('#','').match(/^([0-9a-f]{6}|[0-9a-f]{3})$/i);
+    if(!m)return 'rgba(0,0,0,'+alpha+')';
+    let h=m[1];
+    if(h.length===3)h=h.split('').map(c=>c+c).join('');
+    const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
+  }
+
+  /** Описание одной серии для ECharts. */
+  function buildSeriesEntry(item){
+    const op=opacityState[item.id]||0;
+    return {
+      id:item.id,
+      name:item.name+' · '+(SERIES_GROUPS.find(g=>g.items.some(x=>x.id===item.id))||{}).title,
+      type:'line',
+      // smooth убран намеренно: при сильном зуме сглаживание Catmull-Rom
+      // рассинхронизируется с заливкой areaStyle (контур заливки отстаёт
+      // от кривой линии). С прямыми сегментами заливка всегда строго
+      // под линией.
+      smooth:false,
+      showSymbol:false,
+      symbol:'circle',
+      symbolSize:6,
+      sampling:'lttb',
+      emphasis:{focus:'series',scale:false},
+      lineStyle:{width:2,color:item.color,opacity:op},
+      itemStyle:{color:item.color,opacity:op},
+      areaStyle:{
+        opacity:op*0.9,
+        color:{
+          type:'linear',x:0,y:0,x2:0,y2:1,
+          colorStops:[
+            {offset:0,color:hexToRgba(item.color,0.22)},
+            {offset:1,color:hexToRgba(item.color,0.02)}
+          ]
+        }
+      },
+      z:op>0?10:1,
+      silent:op<=0,
+      data:getSeriesArray(item.id).map(p=>[p.date,p.value])
+    };
+  }
+
+  const baseOption={
+    color:['#6f3ff5'],
+    // Анимация старта (первая отрисовка линии).
+    // Все последующие изменения анимируем сами через requestAnimationFrame,
+    // поэтому встроенные update-анимации ECharts отключаем (durationUpdate:0).
+    animation:true,
+    animationDuration:800,
+    animationEasing:'cubicOut',
+    animationDurationUpdate:0,
+    animationThreshold:20000,
+    grid:{left:isTouch?44:56,right:isTouch?12:24,top:24,bottom:isTouch?80:96,containLabel:false},
+    tooltip:{
+      trigger:'axis',
+      backgroundColor:'#fff',
+      borderColor:'#ececf2',
+      borderWidth:1,
+      padding:[8,12],
+      textStyle:{color:'#111',fontSize:12,fontFamily:'Graphik,Inter,Segoe UI,sans-serif'},
+      axisPointer:{type:'line',lineStyle:{color:'#6f3ff5',width:1,type:'dashed'}},
+      extraCssText:'box-shadow:0 6px 24px -8px rgba(17,17,17,0.18);border-radius:8px',
+      transitionDuration:0.2,
+      formatter:function(params){
+        if(!params||!params.length)return '';
+        const visible=params.filter(p=>visibleSet.has(p.seriesId));
+        if(!visible.length)return '';
+        const iso=(typeof visible[0].value[0]==='string')?visible[0].value[0]:tsToIso(new Date(visible[0].value[0]).getTime());
+        let html='<div style="font-size:11px;color:#8a8a96;margin-bottom:6px">'+fmtDateRu(iso)+'</div>';
+        visible.forEach(p=>{
+          html+='<div style="display:flex;align-items:center;gap:8px;margin-top:2px">'+
+                  '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+p.color+'"></span>'+
+                  '<span style="color:#111;font-weight:600">'+p.seriesName+'</span>'+
+                  '<span style="color:#111;margin-left:auto">'+formatValueWithCurrency(p.value[1])+'</span>'+
+                '</div>';
+        });
+        return html;
+      }
+    },
+    xAxis:{
+      type:'time',
+      min:dataMinTs,
+      max:dataMaxTs,
+      axisLine:{lineStyle:{color:'#ececf2'}},
+      axisTick:{show:false},
+      axisLabel:{color:'#8a8a96',fontSize:11,hideOverlap:true},
+      splitLine:{show:false}
+    },
+    yAxis:{
+      type:'value',
+      min:initY.min,
+      max:initY.max,
+      axisLine:{show:false},
+      axisTick:{show:false},
+      axisLabel:{color:'#8a8a96',fontSize:11,formatter:function(v){return formatYAxisValue(v)}},
+      splitLine:{lineStyle:{color:'#f0f0f6'}}
+    },
+    dataZoom:[
+      {
+        id:'dzInside',type:'inside',xAxisIndex:0,filterMode:'none',
+        startValue:initFromTs,endValue:initToTs,
+        // На сенсорных устройствах отключаем drag-панораму внутри графика,
+        // чтобы свайп пальцем нормально скроллил страницу.
+        // Pinch-зум остаётся работоспособным.
+        zoomOnMouseWheel:!isTouch,moveOnMouseMove:!isTouch,moveOnMouseWheel:false,
+        throttle:40,zoomLock:false
+      },
+      {
+        id:'dzSlider',type:'slider',xAxisIndex:0,filterMode:'none',
+        startValue:initFromTs,endValue:initToTs,
+        // На мобилке слайдер пожирнее, чтобы было удобно тащить пальцем.
+        height:isTouch?32:22,bottom:isTouch?16:24,
+        handleSize:isTouch?'140%':'100%',
+        borderColor:'transparent',
+        backgroundColor:'#fafafe',
+        fillerColor:'rgba(111,63,245,0.12)',
+        handleStyle:{color:'#fff',borderColor:'#6f3ff5',borderWidth:1.5,shadowBlur:0},
+        moveHandleStyle:{color:'#6f3ff5',opacity:.6},
+        selectedDataBackground:{lineStyle:{color:'#6f3ff5',opacity:.6,width:1},areaStyle:{color:'#6f3ff5',opacity:.12}},
+        dataBackground:{lineStyle:{color:'#c9c9d3',width:1},areaStyle:{color:'#ececf2'}},
+        textStyle:{color:'#8a8a96',fontSize:10,fontFamily:'Graphik,Inter,Segoe UI,sans-serif'},
+        labelFormatter:function(v){const d=new Date(v);return isNaN(d.getTime())?'':fmtDateRu(isoFromDate(d));}
+      }
+    ],
+    series:ALL_ITEMS.map(buildSeriesEntry)
+  };
+
+  chart.setOption(baseOption);
+
+  // ===== ПЛАВНАЯ АНИМАЦИЯ ПЕРЕХОДОВ =====
+  // Один кадр = одно setOption, одновременно меняющее dataZoom (X) и yAxis.
+  // Это гарантирует синхронное движение по обеим осям без «рывков».
+
+  let activePeriod=initialPeriod;
+  let isProgrammaticDateChange=false;
+  let isProgrammaticZoom=false;
+  let zoomEventTimer=null;
+  let animFrameId=null;
+
+  function easeCubicInOut(t){
+    return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+  }
+
+  function readCurrentZoom(){
+    const opt=chart.getOption();
+    const dz=opt.dataZoom&&opt.dataZoom[0];
+    let sv,ev;
+    if(dz){
+      if(dz.startValue!=null && dz.endValue!=null){sv=+dz.startValue;ev=+dz.endValue;}
+      else{
+        const s=(dz.start==null?0:dz.start)/100;
+        const e=(dz.end==null?100:dz.end)/100;
+        sv=dataMinTs+(dataMaxTs-dataMinTs)*s;
+        ev=dataMinTs+(dataMaxTs-dataMinTs)*e;
+      }
+    }else{sv=dataMinTs;ev=dataMaxTs;}
+    const yAx=opt.yAxis&&opt.yAxis[0];
+    let ymin=yAx?yAx.min:null;
+    let ymax=yAx?yAx.max:null;
+    if(ymin==null||ymax==null||typeof ymin!=='number'||typeof ymax!=='number'){
+      const fb=computeYRange(tsToIso(sv),tsToIso(ev));
+      if(fb){ymin=fb.min;ymax=fb.max;}else{ymin=0;ymax=1;}
+    }
+    return {fromTs:sv,toTs:ev,ymin:ymin,ymax:ymax};
+  }
+
+  function applySnapshot(fromTs,toTs,ymin,ymax){
+    chart.setOption({
+      dataZoom:[
+        {id:'dzInside',startValue:fromTs,endValue:toTs},
+        {id:'dzSlider',startValue:fromTs,endValue:toTs}
+      ],
+      yAxis:{min:ymin,max:ymax}
+    });
+  }
+
+  /** Плавный переход к диапазону [fromIso..toIso] за `duration` мс. */
+  function animatedZoom(fromIso,toIso,duration){
+    const [a,b]=clampRange(fromIso,toIso);
+    const targetFromTs=isoToTs(a);
+    const targetToTs=isoToTs(b);
+    const targetY=computeYRange(a,b)||{min:0,max:1};
+    const cur=readCurrentZoom();
+
+    if(animFrameId){cancelAnimationFrame(animFrameId);animFrameId=null;}
+
+    setDateInputs(a,b);
+
+    const xChanged=Math.abs(cur.fromTs-targetFromTs)>1 || Math.abs(cur.toTs-targetToTs)>1;
+    const yScale=Math.max(Math.abs(cur.ymax-cur.ymin),Math.abs(targetY.max-targetY.min),1);
+    const yDelta=Math.abs(cur.ymin-targetY.min)+Math.abs(cur.ymax-targetY.max);
+    const yChanged=(yDelta/yScale)>0.001;
+    if(!xChanged && !yChanged){
+      applySnapshot(targetFromTs,targetToTs,targetY.min,targetY.max);
+      return;
+    }
+
+    const dur=duration||650;
+    const t0=performance.now();
+    isProgrammaticZoom=true;
+
+    function step(now){
+      const t=Math.min(1,(now-t0)/dur);
+      const e=easeCubicInOut(t);
+      const fts=cur.fromTs+(targetFromTs-cur.fromTs)*e;
+      const tts=cur.toTs+(targetToTs-cur.toTs)*e;
+      const ymin=cur.ymin+(targetY.min-cur.ymin)*e;
+      const ymax=cur.ymax+(targetY.max-cur.ymax)*e;
+      applySnapshot(fts,tts,ymin,ymax);
+      if(t<1){
+        animFrameId=requestAnimationFrame(step);
+      }else{
+        animFrameId=null;
+        isProgrammaticZoom=false;
+      }
+    }
+    animFrameId=requestAnimationFrame(step);
+  }
+
+  function setDateInputs(fromIso,toIso){
+    isProgrammaticDateChange=true;
+    if(fpFrom)fpFrom.setDate(fmtDateRu(fromIso),false);
+    if(fpTo)fpTo.setDate(fmtDateRu(toIso),false);
+    isProgrammaticDateChange=false;
+  }
+
+  function setActiveButton(period){
+    document.querySelectorAll('#periodBtns .period-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.period===period);
+    });
+  }
+
+  function applyPeriod(period){
+    const [from,to]=periodToRange(period);
+    activePeriod=period;
+    setActiveButton(period);
+    animatedZoom(from,to);
+  }
+
+  // ===== СОБЫТИЯ КНОПОК / ДАТ =====
+  document.getElementById('periodBtns').addEventListener('click',function(e){
+    const btn=e.target.closest('.period-btn');
+    if(!btn)return;
+    applyPeriod(btn.dataset.period);
+  });
+
+  // Двойной клик — плавный возврат к текущему периоду (или ко всему диапазону).
+  dom.addEventListener('dblclick',function(){
+    if(activePeriod){
+      const [from,to]=periodToRange(activePeriod);
+      animatedZoom(from,to);
+    }else{
+      animatedZoom(dataMinIso,dataMaxIso);
+    }
+  });
+
+  window.addEventListener('resize',function(){chart.resize()});
+
+  // Пользовательский зум (колесо/слайдер): синхронизируем поля и Y-ось мгновенно.
+  chart.on('dataZoom',function(){
+    if(isProgrammaticZoom)return;
+    if(zoomEventTimer)clearTimeout(zoomEventTimer);
+    zoomEventTimer=setTimeout(function(){
+      const cur=readCurrentZoom();
+      const fromIso=tsToIso(cur.fromTs);
+      const toIso=tsToIso(cur.toTs);
+      const yr=computeYRange(fromIso,toIso);
+      if(yr)chart.setOption({yAxis:{min:yr.min,max:yr.max}});
+      setDateInputs(fromIso,toIso);
+      activePeriod='';
+      setActiveButton('');
+    },80);
+  });
+
+  // ===== FLATPICKR =====
+  let fpFrom,fpTo;
+  function onDateChange(){
+    if(isProgrammaticDateChange)return;
+    const fromStr=document.getElementById('dateFrom').value.trim();
+    const toStr=document.getElementById('dateTo').value.trim();
+    const fromIso=parseDateRu(fromStr)||dataMinIso;
+    const toIso=parseDateRu(toStr)||dataMaxIso;
+    activePeriod='';
+    setActiveButton('');
+    animatedZoom(fromIso,toIso);
+  }
+
+  fpFrom=flatpickr('#dateFrom',{
+    dateFormat:'d.m.Y',locale:'ru',allowInput:false,
+    minDate:fmtDateRu(dataMinIso),maxDate:fmtDateRu(dataMaxIso),
+    onChange:onDateChange
+  });
+  fpTo=flatpickr('#dateTo',{
+    dateFormat:'d.m.Y',locale:'ru',allowInput:false,
+    minDate:fmtDateRu(dataMinIso),maxDate:fmtDateRu(dataMaxIso),
+    onChange:onDateChange
+  });
+
+  // ===== ПЕРЕКЛЮЧЕНИЕ СЕРИЙ =====
+  // У каждой серии своя независимая RAF-анимация прозрачности (320 мс),
+  // поэтому несколько включений/выключений могут идти параллельно
+  // и не конфликтуют с RAF-анимацией зума по X/Y.
+  const opAnims={};
+
+  function animateSeriesOpacity(item,target){
+    if(opAnims[item.id]){cancelAnimationFrame(opAnims[item.id]);opAnims[item.id]=null;}
+    const cur=opacityState[item.id]==null?0:opacityState[item.id];
+    const dur=320;
+    const t0=performance.now();
+    if(target>cur){
+      // При появлении сразу выводим серию вверх и включаем взаимодействие.
+      chart.setOption({series:[{id:item.id,z:10,silent:false}]});
+    }
+    function step(now){
+      const t=Math.min(1,(now-t0)/dur);
+      const e=easeCubicInOut(t);
+      const v=cur+(target-cur)*e;
+      opacityState[item.id]=v;
+      chart.setOption({series:[{
+        id:item.id,
+        lineStyle:{opacity:v},
+        itemStyle:{opacity:v},
+        areaStyle:{opacity:v*0.9}
+      }]});
+      if(t<1){
+        opAnims[item.id]=requestAnimationFrame(step);
+      }else{
+        opAnims[item.id]=null;
+        if(target<=0){
+          chart.setOption({series:[{id:item.id,z:1,silent:true}]});
+        }
+      }
+    }
+    opAnims[item.id]=requestAnimationFrame(step);
+  }
+
+  function toggleSeries(item){
+    if(visibleSet.has(item.id)){
+      visibleSet.delete(item.id);
+      animateSeriesOpacity(item,0);
+    }else{
+      visibleSet.add(item.id);
+      animateSeriesOpacity(item,1);
+    }
+    // Y-ось плавно подстраиваем под новый набор видимых серий.
+    const cur=readCurrentZoom();
+    animatedZoom(tsToIso(cur.fromTs),tsToIso(cur.toTs),320);
+  }
+
+  // ===== РЕНДЕР ПАНЕЛИ КЛАСТЕРОВ =====
+  function renderSeriesPanel(){
+    const panel=document.getElementById('seriesPanel');
+    if(!panel)return;
+    panel.innerHTML='';
+    SERIES_GROUPS.forEach(g=>{
+      const groupEl=document.createElement('div');
+      groupEl.className='series-group';
+      groupEl.innerHTML=
+        '<div class="series-group-title">'+g.title+'</div>'+
+        '<div class="series-chips">'+
+          g.items.map(it=>(
+            '<button type="button" class="series-chip'+(visibleSet.has(it.id)?' active':'')+'" '+
+              'data-id="'+it.id+'" style="--c:'+it.color+'">'+it.name+'</button>'
+          )).join('')+
+        '</div>';
+      panel.appendChild(groupEl);
+    });
+  }
+  renderSeriesPanel();
+
+  document.getElementById('seriesPanel').addEventListener('click',function(e){
+    const btn=e.target.closest('.series-chip');
+    if(!btn)return;
+    const id=btn.dataset.id;
+    const item=ALL_ITEMS.find(x=>x.id===id);
+    if(!item)return;
+    btn.classList.toggle('active');
+    toggleSeries(item);
+  });
+
+  // ===== ПЕРЕКЛЮЧАТЕЛЬ ВАЛЮТЫ =====
+  function applyCurrToggleUI(){
+    document.querySelectorAll('#currToggle .curr-toggle-opt').forEach(b=>{
+      b.classList.toggle('active', b.dataset.curr===activeCurrency);
+    });
+  }
+
+  /** Плавная смена валюты: видимые серии fade-out → подмена данных → fade-in. */
+  function setCurrency(curr){
+    if(curr!=='RUB' && curr!=='USD')return;
+    if(curr===activeCurrency || isCurrencyTransitioning)return;
+    isCurrencyTransitioning=true;
+    activeCurrency=curr;
+    applyCurrToggleUI();
+
+    const visibleItems=ALL_ITEMS.filter(it=>visibleSet.has(it.id));
+    const fadeMs=260;
+
+    // 1) Плавно скрываем видимые серии.
+    visibleItems.forEach(it=>animateSeriesOpacity(it,0));
+
+    setTimeout(function(){
+      // 2) Подменяем данные у ВСЕХ серий и Y-ось — мгновенно (всё уже невидимо).
+      const newSeries=ALL_ITEMS.map(it=>({
+        id:it.id,
+        data:getSeriesArray(it.id).map(p=>[p.date,p.value])
+      }));
+      chart.setOption({series:newSeries});
+      const cur=readCurrentZoom();
+      const fromIso=tsToIso(cur.fromTs);
+      const toIso=tsToIso(cur.toTs);
+      const yr=computeYRange(fromIso,toIso);
+      if(yr)chart.setOption({yAxis:{min:yr.min,max:yr.max}});
+
+      // 3) Плавно возвращаем видимость.
+      visibleItems.forEach(it=>animateSeriesOpacity(it,1));
+      setTimeout(function(){isCurrencyTransitioning=false;},fadeMs+30);
+    }, fadeMs+20);
+  }
+
+  document.getElementById('currToggle').addEventListener('click',function(e){
+    const btn=e.target.closest('.curr-toggle-opt[data-curr]');
+    if(!btn)return;
+    setCurrency(btn.dataset.curr);
+  });
+
+  // ===== СТАРТ =====
+  // Стартовый период уже задан в baseOption; нужно только синхронизировать UI.
+  setDateInputs(initFromIso,initToIso);
+  setActiveButton(initialPeriod);
+  applyCurrToggleUI();
+})();
+</script>
+</body>
+</html>
